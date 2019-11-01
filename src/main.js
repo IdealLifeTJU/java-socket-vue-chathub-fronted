@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import App from './App.vue'
 import $ from 'jquery'
+import router from './router.js'
+import 'view-design/dist/styles/iview.css'
 /**
  * 转换成图片表情
  */
@@ -46,5 +48,6 @@ Vue.directive('emotion', {
 new Vue({
   el: '#app',
   $,
-  render: h => h(App)
+  render: h => h(App),
+  router
 })

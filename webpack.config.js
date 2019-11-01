@@ -21,11 +21,11 @@ module.exports = {
       },
       {
         test:/\.css$/,
-        include:[
-          /src/,
-          '/node_modules/'
+        use:[
+          'style-loader',
+          'css-loader',
+          'resolve-url-loader'
         ],
-        loader: "style-loader!css-loader!stylus-loader",
       },
       {
         test: /\.js$/,
@@ -33,8 +33,8 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.(png|jpg|gif|svg)$/,
-        loader: 'file-loader',
+        test: /\.(png|jpg|gif|svg|eot|ttf|woff|woff2)$/,
+        loader: 'url-loader',
         options: {
           name: '[name].[ext]?[hash]'
         }

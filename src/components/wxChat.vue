@@ -70,7 +70,7 @@
     }
     .message .time {
         margin: 10px 0;
-        text-align: center;
+        text-align: right;
     }
     .message .text {
         display: inline-block;
@@ -122,14 +122,14 @@
         margin: 0 0 0 10px;
     }
     .message .self .text {
-        background-color: #9EEA6A;
+        background-color: #FFFFFF;
     }
 
     .message .self .text:before {
         right: inherit;
         left: 100%;
         border-right-color: transparent;
-        border-left-color: #9EEA6A;
+        border-left-color: #FFFFFF;
     }
     .message .image{
         max-width: 200px;
@@ -179,7 +179,7 @@
 </style>
 
 <template>
-    <div class="wxchat-container" :style="{backgroundColor: wrapBg}">
+    <div class="wxchat-container" style="backgroundColor:#efefef; font-family:'Perpetua Titling MT','Microsoft Yahei';">
         <div class="window" id="window-view-container" :style="{maxHeight: maxHeight + 'px', width: width +'px'}">
             <!-- data is empty -->
             <div class="loading" v-if="data && data.length==0">
@@ -204,7 +204,7 @@
                     <ul>
                         <li v-for="(message, index) in data" :key="message.id" :class="message.type==3?'an-move-right':'an-move-left'">
                             <p class="time"> <span v-text="message.ctime"></span> </p>
-                            <p class="time system" v-if="message.messagetype==10000"> <span v-html="message.content"></span> </p>
+                            <p class="time system" v-if="message.messagetype==3"> <span v-html="message.content"></span> </p>
                             <div :class="'main' + (message.type==3?' self':'')" v-else>
                                 <p class="nickName">{{message.nickName}}</p>
                                 <img class="avatar" width="45" height="45" :src="getAvatarUrl(message.type)">
@@ -247,10 +247,6 @@ export default {
     width: {
       type: Number,
       default: 450,
-    },
-    wrapBg: {
-      type: String,
-      default: '#efefef'
     },
     maxHeight: {
       type: Number,
