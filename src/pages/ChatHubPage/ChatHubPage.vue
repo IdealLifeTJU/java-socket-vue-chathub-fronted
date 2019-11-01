@@ -3,7 +3,7 @@
    <wxChat 
      :data="ChatData"
      :showShade="false"
-     contactNickname="Web Socket Chat Hub"
+     contactNickname="HOLLOW"
      :getUpperData="getUpperData"
      :getUnderData="getUnderData"
      :ownerAvatarUrl="ownerAvatarUrl"

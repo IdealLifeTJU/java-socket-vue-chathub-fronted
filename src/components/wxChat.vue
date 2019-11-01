@@ -70,7 +70,7 @@
     }
     .message .time {
         margin: 10px 0;
-        text-align: right;
+        text-align: left;
     }
     .message .text {
         display: inline-block;
@@ -151,6 +151,15 @@
     .bgnone{
         background: none;
     }
+    .selfTime{
+      float:right !important;
+      display: inline-block; 
+    }
+    .selfNick{
+      float:right !important;
+      display: inline-block;
+      margin-right:0rem !important;
+    }
     @keyframes moveRight{
         0%{left:-20px; opacity: 0};
         100%{left:0; opacity: 1}
@@ -179,53 +188,59 @@
 </style>
 
 <template>
-    <div class="wxchat-container" style="backgroundColor:#efefef; font-family:'Perpetua Titling MT','Microsoft Yahei';">
-        <div class="window" id="window-view-container" :style="{maxHeight: maxHeight + 'px', width: width +'px'}">
-            <!-- data is empty -->
-            <div class="loading" v-if="data && data.length==0">
-                <div style="margin-top: 300px;text-align:center; font-size: 16px;">
-                    <span>未查找到聊天记录</span>
-                </div>
-            </div>
-
-            <!-- loading -->
-            <div class="loading" v-if="data.length==0">
-                <div style="margin-top: 300px;">
-                        <div>加载中...</div>
-                </div>
-            </div>
-
-            <div class="title" v-if="data && data.length>0">
-                <p v-text="contactNickname"></p>
-            </div>
-            <!-- main -->
-            <ScrollLoader :minHeight="minHeight" @scroll-to-top="refresh" @scroll-to-botton="infinite" class="container-main" v-if="data && data.length>0" :style="{maxHeight: maxHeight-50 + 'px'}">
-                <div class="message">
-                    <ul>
-                        <li v-for="(message, index) in data" :key="message.id" :class="message.type==3?'an-move-right':'an-move-left'">
-                            <p class="time"> <span v-text="message.ctime"></span> </p>
-                            <p class="time system" v-if="message.messagetype==3"> <span v-html="message.content"></span> </p>
-                            <div :class="'main' + (message.type==3?' self':'')" v-else>
-                                <p class="nickName">{{message.nickName}}</p>
-                                <img class="avatar" width="45" height="45" :src="getAvatarUrl(message.type)">
-                                <!-- 文本 -->
-                                <div class="text" v-emotion="message.content" v-if="message.messageType==1"></div>
-                                <!-- 图片 -->
-                                <div class="text" v-else-if="message.messageType==2">
-                                    <img :src="message.content" class="image" alt="聊天图片">
-                                </div>
-                                <!-- 文件 -->
-                                <a class="text" v-else-if="message.messageType==3" :download="message.content" :href="message.fileHref">{{message.content}}</a>
-                                <!-- 其他 -->
-                                <div class="text" v-else-if="message.messagetype!=10000" v-text="'[暂未支持的消息类型:'+ message.messagetype +']\n\r' + message.content">
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </ScrollLoader>
+  <div class="wxchat-container" :style="{backgroundColor:wrapBg, fontFamily:fontFamily}">
+    <div class="window" id="window-view-container" :style="{maxHeight: maxHeight + 'px', width: width +'px'}">
+      <!-- data is empty -->
+      <div class="loading" v-if="data && data.length==0">
+        <div style="margin-top: 300px;text-align:center; font-size: 16px;">
+          <span>未查找到聊天记录</span>
         </div>
+      </div>
+
+      <!-- loading -->
+      <div class="loading" v-if="data.length==0">
+        <div style="margin-top: 300px;">
+          <div>加载中...</div>
+        </div>
+      </div>
+
+      <div class="title" v-if="data && data.length>0">
+        <p v-text="contactNickname"></p>
+      </div>
+      <!-- main -->
+      <ScrollLoader :minHeight="minHeight" @scroll-to-top="refresh" @scroll-to-botton="infinite" class="container-main" 
+        v-if="data && data.length>0" :style="{maxHeight: maxHeight-50 + 'px'}">
+        <div class="message">
+          <ul>
+            <li v-for="(message, index) in data" :key="message.id" 
+              :class="message.type==3?'an-move-right':'an-move-left'">
+              <div :class="(message.type==3?' self':'')">
+                <div>
+                  <p :class="(message.type==3?'selfNick':'')" class="nickName" style="float:left; display:inline-block; padding-top:0.5rem; margin-right: 0.8rem;">{{message.nickName}}</p>
+                  <p :class="(message.type==3?'selfTime':'')" class="time" style="float:left; display:inline-block; padding-bottom:0.5rem; margin-right:0.8rem;"> 
+                    <span v-text="message.ctime"></span>
+                  </p>
+                </div>
+                <div style="clear:both;">
+                  <img class="avatar" width="45" height="45" :src="getAvatarUrl(message.type)">
+                  <!-- 文本 -->
+                  <div class="text" v-emotion="message.content" v-if="message.messageType==1"></div>
+                  <!-- 图片 -->
+                  <div class="text" v-if="message.messageType==2">
+                    <img :src="message.content" class="image" alt="聊天图片">
+                  </div>
+                  <!-- 文件 -->
+                  <a class="text" v-if="message.messageType==3" :download="message.content" :href="message.fileHref">{{message.content}}</a>
+                </div>
+                <!-- 其他 -->
+                <!--<div class="text" v-if="message.messagetype!=10000" v-text="'[暂未支持的消息类型:'+ message.messagetype +']\n\r' + message.content"></div>-->
+              </div>
+            </li>
+          </ul>
+        </div>
+      </ScrollLoader>
     </div>
+  </div>
 </template>
 
 <script>
@@ -243,6 +258,11 @@ export default {
     data: {
       type: Array,
       required: true
+    },
+
+    wrapBg:{
+      type: String,
+      default: "#efefef",
     },
     width: {
       type: Number,
@@ -269,6 +289,10 @@ export default {
       type: Function,
       required: true
     },
+    fontFamily:{
+      type: String,
+      default: "Perpetua Titling MT,Microsoft Yahei",
+    }
   },
   data() {
     return {
