@@ -15,8 +15,10 @@
 [{
     //根据这个来排序消息
     id: 1, 
-    //1为文本，2为图片
+    //1为文本，2为图片,3为文件
     messageType: 1, 
+    //头像序号
+    avatarNum: Number
     //1：系统信息，2：来自于其他人消息，3：自己的消息
     type: 1,
     //显示消息发送者的称呼
@@ -222,7 +224,7 @@
                   </p>
                 </div>
                 <div style="clear:both;">
-                  <img class="avatar" width="45" height="45" :src="getAvatarUrl(message.type)">
+                  <img class="avatar" width="45" height="45" :src="getAvatarUrl(message.avatarNum)">
                   <!-- 文本 -->
                   <div class="text" v-emotion="message.content" v-if="message.messageType==1"></div>
                   <!-- 图片 -->
@@ -272,13 +274,10 @@ export default {
       type: Number,
       default: 600
     },
-    contactAvatarUrl: {
-      type: String,
-    },
-    ownerAvatarUrl: {
-      type: String,
-    },
     systemAvatarUrl:{
+      type: String,
+    },
+    baseAvatarUrl:{
       type: String,
     },
     getUpperData: {
@@ -368,14 +367,11 @@ export default {
       }
       me.isUnderLaoding = false;
     },
-    getAvatarUrl:function(type){
-      if(type == 1){
+    getAvatarUrl:function(avatarNum){
+      if(avatarNum == -1)
         return this.systemAvatarUrl;
-      }
-      else if(type == 2){
-        return this.contactAvatarUrl;
-      }else if(type == 3){
-        return this.ownerAvatarUrl;
+      else{
+        return this.baseAvatarUrl + String(avatarNum) + '.png';
       }
     }
   },

@@ -6,10 +6,9 @@
      contactNickname="HOLLOW"
      :getUpperData="getUpperData"
      :getUnderData="getUnderData"
-     :ownerAvatarUrl="ownerAvatarUrl"
-     :contactAvatarUrl="contactAvatarUrl"
      :systemAvatarUrl="systemAvatarUrl"
-     :width="1200">
+     :baseAvatarUrl="baseAvatarUrl"
+     :width="1200" class="wxChat">
     </wxChat>
     <div class="textareaContainer">
       <textarea class="InputArea" v-model="textMsg">
@@ -26,6 +25,7 @@
 <script>
 import wxChat from '../../components/wxChat.vue'
 //import {sendFile, connectWebSocket, closeWebSocket, send, handleMessage} from './Socket.js'
+import bus from '../../assets/js/bus.js'
 export default {
   name: 'app',
   data(){
@@ -34,12 +34,13 @@ export default {
       websocket : null,
       isDisplay : true,
       sessionId:"",
-      nickName:"Test",
-        //表示即将到来的文件发送者的昵称
-      senderNickName:String,
-        //1：即将到来图片由自己发送；-1：即将到来的图片由他人发送;
-        //2：即将到来的文件由自己发送；-2：即将到来的文件由他人发送；
-        //0: 没有文件将要到来。
+      //表示即将到来的文件发送者的昵称
+      senderNickName: String,
+      //表示即将到来的发送者的头像数据
+      senderAvatarNum: String,
+      //1：即将到来图片由自己发送；-1：即将到来的图片由他人发送;
+      //2：即将到来的文件由自己发送；-2：即将到来的文件由他人发送；
+      //0: 没有文件将要到来。
       fileState:Number,
       files:String,
       //即将到来的文件的名称
@@ -51,14 +52,17 @@ export default {
       upperId: 0,
       underId: 6,
       width: window.screen.width,
-      ownerAvatarUrl: './src/assets/avatar1.png',
-      contactAvatarUrl: './src/assets/avatar2.png',
+      baseAvatarUrl: './src/assets/imgs/images/8_0',
       systemAvatarUrl:'./src/assets/logo.png',
+
+      user:{},
+
       ChatData: [{
         id: 1,
         messageType: 1,
         type:3,
         nickName:"Test",
+        avatarNum: 1,
         content: '你好!![呲牙]',
         ctime: new Date().toLocaleString()
       },
@@ -67,6 +71,7 @@ export default {
         messageType: 1,
         type:1,
         nickName:"Test",
+        avatarNum: 1,
         content: '你也好。[害羞]',
         ctime: new Date().toLocaleString()
       },
@@ -75,6 +80,7 @@ export default {
         messageType: 1,
         type:3,
         nickName:"Test",
+        avatarNum: 1,
         content: '这是我的简历头像：',
         ctime: new Date().toLocaleString()
       },
@@ -83,6 +89,7 @@ export default {
         messageType: 2,
         type:3,
         nickName:"Test",
+        avatarNum: 1,
         content: './src/assets/wyz.jpg',
         ctime: new Date().toLocaleString()
       },
@@ -91,6 +98,7 @@ export default {
         messageType: 1,
         type:2,
         nickName:"Test",
+        avatarNum: 1,
         content: '你开心就好。[微笑]',
         ctime: new Date().toLocaleString()
       },
@@ -99,15 +107,14 @@ export default {
         messageType: 1,
         type:3,
         nickName:"Test",
+        avatarNum: 1,
         content: '你开心就好。[微笑]',
         ctime: new Date().toLocaleString()
       }]
     }
   },
   components:{wxChat},
-  created(){
-    this.initWidth();
-  },
+
   methods:{
     sendFile:function(){
       var that = this;
@@ -207,11 +214,14 @@ export default {
     connectWebSocket(){
         //判断当前浏览器是否支持WebSocket
         var handleMessage = this.handleMessage;
+        var roomNum = this.user.roomNum-1;
+        let connectString = "ws://localhost:8080/websocket/"+roomNum+"/"+this.user.nickName+"/"+this.user.avatarNum
+            +"/" + this.user.channelNum + "/" + this.user.chosenHub;
         if ('WebSocket'in window) {
           if(this.websocket != null){
             console.log("连接已建立！");
           }else{
-            this.websocket = new WebSocket("ws://localhost:8080/websocket/"+this.nickName);
+            this.websocket = new WebSocket(connectString);
             console.log("连接建立成功！");
           }
         } else {
@@ -250,20 +260,24 @@ export default {
           return;
         }else if(this.fileState == 1){
           var fileState = 3;
-          var senderNickName = this.nickName;
+          var senderNickName = this.user.nickName;
+          var senderAvatarNum = this.user.avatarNum;
           var messageType = 2;
         }else if(this.fileState == -1){
           var fileState = 2;
           var senderNickName = this.senderNickName;
+          var senderAvatarNum = this.senderAvatarNum;
           var messageType = 2;
         }else if(this.fileState == 2){
           var fileState = 3;
-          var senderNickName = this.nickName;
+          var senderNickName = this.user.nickName;
+          var senderAvatarNum = this.user.avatarNum;
           var messageType = 3;
           var fileName = this.fileName;
         }else if(this.fileState == -2){
           var fileState = 2;
           var senderNickName = this.senderNickName;
+          var senderAvatarNum = this.senderAvatarNum;
           var messageType = 3;
           var fileName = this.fileName;
         }
@@ -272,23 +286,28 @@ export default {
           if(event.target.readyState == FileReader.DONE){
             //得到FileReader读取二进制数据所得到的URL，并用其生成图片或者文件。
             var url = event.target.result;
+            //
             if(messageType==3){
+              //文件
               var msg={
-                id:that.ChatData.length + 1,
-                type:fileState,
-                messageType:messageType,
-                nickName:senderNickName,
-                content:fileName,
-                fileHref:url,
+                id: that.ChatData.length + 1,
+                type: fileState,
+                messageType: messageType,
+                nickName: senderNickName,
+                avatarNum: senderAvatarNum,
+                content: fileName,
+                fileHref: url,
                 ctime:new Date().toLocaleString(),
               }
               that.fileName = null;
             }else{
+              //图片
               var msg={
                 id:that.ChatData.length + 1,
                 type:fileState,
                 messageType:messageType,
                 nickName:senderNickName,
+                avatarNum: senderAvatarNum,
                 content:url,
                 ctime:new Date().toLocaleString(),
               };
@@ -299,6 +318,7 @@ export default {
         reader.readAsDataURL(message);
         this.fileState = 0;
         this.senderNickName = null;
+        this.senderAvatarNum = null;
         return;
       }
       
@@ -309,6 +329,7 @@ export default {
           id:this.ChatData.length + 1,
           type:1,
           messageType:1,
+          avatarNum: -1,
           nickName:"系统提示",
           content:"您已经连接进入聊天室，当前在线人数为"+message.userNum+"人。",
           ctime:new Date().toLocaleString(),
@@ -318,6 +339,7 @@ export default {
           id:this.ChatData.length + 1,
           type:1,
           messageType:1,
+          avatarNum: -1,
           nickName:"系统提示",
           content:"新用户"+message.nickName+"已经连接进入聊天室，当前在线人数为"+message.userNum+"人。",
           ctime:new Date().toLocaleString(),
@@ -327,6 +349,7 @@ export default {
           id:this.ChatData.length + 1,
           type:1,
           messageType:1,
+          avatarNum: -1,
           nickName:"系统提示",
           content:"用户"+message.nickName+"已经退出聊天室，当前在线人数为"+message.userNum+"人。",
           ctime: new Date().toLocaleString(),
@@ -336,26 +359,30 @@ export default {
           id:this.ChatData.length + 1,
           type:2,
           messageType:1,
+          avatarNum: message.avatarNum,
           nickName:message.nickName,
           content:message.content,
           ctime:new Date().toLocaleString(),
         };
       }else if(message.type == 5){
         var msg={
-          id:this.ChatData.length + 1,
-          type:3,
-          messageType:1,
-          nickName:this.nickName,
-          content:message.content,
-          ctime:new Date().toLocaleString(),
+          id: this.ChatData.length + 1,
+          type: 3,
+          messageType: 1,
+          nickName: this.user.nickName,
+          avatarNum: this.user.avatarNum,
+          content: message.content,
+          ctime: new Date().toLocaleString(),
         };
       }else if(message.type == 6){
         this.senderNickName = message.nickName;
+        this.senderAvatarNum = message.avatarNum;
         this.fileState = -1;
       }else if(message.type == 7){
         this.fileState = 1;
       }else if(message.type == 8){
         this.senderNickName = message.nickName;
+        this.senderAvatarNum = message.avatarNum
         this.fileName = message.fileName;
         this.fileState = -2;
         console.log(this.fileName);
@@ -378,14 +405,18 @@ export default {
     send(type, message) {
       var socketMsg = {type:type};
       if(type == 1){
+        //文字信息
         socketMsg.msg = message;
         this.textMsg = "";
         this.websocket.send(JSON.stringify(socketMsg));
       }else if(type == 2){
+        //图片数据
         this.websocket.send(message);
       }else if(type == 3){
+        //文件数据
         this.websocket.send(message);
       }else if(type == 4){
+        //给客户端发送的文件头信息
         socketMsg.msg = message;
         this.websocket.send(JSON.stringify(socketMsg));
       }
@@ -475,12 +506,24 @@ export default {
     },
   },
   mounted(){
+    this.user = bus.user;
+    console.log(this.user);
     this.connectWebSocket();
+  },
+  created(){
+    this.initWidth();
+    bus.$on('send', function(user){
+      bus.user = user;
+    });
+        
   },
 }
 </script>
 
 <style>
+.wxChat{
+  background-image:url('../../assets/imgs/timg.jpg')
+}
 .inputButton{
   height:50px;
   width:100px;
@@ -513,7 +556,7 @@ export default {
   z-index:101;
   min-width:300px;
   width:100%;
-  height:70%;
+  height:30%;
   font-size:30px;
 }
 .chatHub{
@@ -523,6 +566,7 @@ export default {
   left:0;
   top:0;
   background:#efefef;
+  background-image:url('../../assets/imgs/timg.jpg')
 }
 *{
   margin: 0;

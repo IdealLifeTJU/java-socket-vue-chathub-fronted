@@ -1,15 +1,15 @@
 <template>
-  <div style="width:100%; height:35rem;">
+  <div style="width:100%; height:50rem;">
     <div 
       style="width:100%; margin-top:5rem;
       margin-left:auto; margin-right:auto;
       text-align:center">
       <img 
-        style="width:30rem; margin:0 auto;" 
+        style="width:50rem; margin:0 auto;" 
         src="../../assets/imgs/Hollow.png">
       </img>
     </div>
-    <div style="width:100%; text-align:center">
+    <div style="width:100%; text-align:center; margin-top: -5rem">
       <input
         style="width:40rem; height:3rem;
         margin:0 auto; border-radius:5rem 5rem 5rem 5rem;
@@ -67,6 +67,16 @@
         </Radio>
       </RadioGroup>
     </div>
+
+    <div class="roomButtonContainer">
+      <div style="width:40%; height:90%; margin: auto auto;">
+        <div v-for="i in roomNum"class="roomButton" :class="{chosenRoom: isChosenRoom(i)}"
+        @click = "chooseRoom(i)">
+          {{word[i-1]}}
+        </div>
+      </div>
+    </div>
+
     <div style="width:100%; margin-top:1rem; 
       height:10rem; text-align:center;">
       <Button 
@@ -137,10 +147,14 @@
 <script>
 import {RadioGroup, Radio, Button, Modal, Row, Col} from 'view-design'
 import {modalTitles, modalContents, avatarNum, baseURL} from '../../assets/js/modal.js'
+import bus from '../../assets/js/bus.js'
 export default{
 
   components:{
       RadioGroup, Radio, Button, Modal, Row, Col,
+  },
+  beforeDestroy() {
+    bus.$emit('send',this.user);
   },
   data(){
     return{
@@ -154,22 +168,31 @@ export default{
 
       user:{
         nickName: "",
-        avatarNum: -1,
-        channelNum: "",
+        avatarNum: 1,
+        channelNum: "null",
+        chosenHub: -1,
+        roomNum: 0,
       },
+
+      roomNum: 6,
+      word:["文","体","科","政","经","生"]
     }
   },
   computed:{
+    //介绍弹窗标题
     modalTitle(){
       return modalTitles[this.chosenHub];
     },
+    //介绍弹窗内容
     modalContent(){
       return modalContents[this.chosenHub];
     },
+    //计算图片排数
     rowNum(){
       const colPerRow = this.imgsColPerRow;
       return Math.floor((avatarNum+colPerRow-1)/colPerRow);
     },
+    //计算图片每排有多少图片
     colNum(){
       return function (rowNum){
         const colPerRow = this.imgsColPerRow;
@@ -180,18 +203,18 @@ export default{
         }
       }
     },
+    //返回图片路径
     imgsPath(){
       return function(i,j){
         const ColPerRow = this.imgsColPerRow;
-        var ImgURL = baseURL+String((i-1)*ColPerRow+j)+".png";
-        return require("../../"+ImgURL);
+        var ImgURL = baseURL + String((i-1)*ColPerRow+j)+".png";
+        return require("../../"+ ImgURL);
       }
     }
   },
   methods:{
     onVisibleChange(){
       this.modalStep=0;
-      this.user.avatarNum=-1;
     },
     modalCancel(){
       this.confirmModal=false;
@@ -212,7 +235,6 @@ export default{
         }else{
           this.confirmModal = false;
           this.modalStep = 0;
-          this.user.avatarNum = -1;
         }
       }else if(this.modalStep==2){
         var reg = /^\d{4}$/;
@@ -222,23 +244,35 @@ export default{
         }
         this.confirmModal=false;
         this.modalStep = 0;
-        this.user.avatarNum = -1;
       }
     },
     isChosenButton(i){
       return this.chosenHub == i;
     },
     isChosenImg(i,j){
-      return this.user.avatarNum == i*this.imgsColPerRow + j;
+      var test =  this.user.avatarNum == (i-1)*this.imgsColPerRow + j;
+      if(test){
+        return true;
+      }
+    },
+    isChosenRoom(i){
+      return this.user.roomNum == i-1;
+    },
+    chooseRoom(i){
+      this.user.roomNum = i-1;
     },
     handleOK(){
       if(this.user.nickName == ""){
         alert("Please Enter Your User Name");
         return;
-      }
+      };
+      this.$router.push({
+        name: 'chatHubPage',
+      });
+      this.user.chosenHub = this.chosenHub;
     },
     choseAvatar(i, j){
-      this.user.avatarNum = i*this.imgsColPerRow + j;
+      this.user.avatarNum = (i-1)*this.imgsColPerRow + j;
     },
   }
 }
@@ -273,6 +307,38 @@ input:focus{
 }
 .ivu-modal-header p, .ivu-modal-header-inner{
   text-align:center;
+}
+.chosenRoom{
+  background: black !important;
+  color: white;
+}
+.roomButton{
+  background: white;
+  height: 5rem;
+  border: solid black 0.05rem;
+  width: 13%;
+  float: left;
+  margin-left: 3%;
+  margin-top: auto;
+  margin-bottom: auto;
+  text-align:center;
+  padding: auto auto;
+  font-size: 3rem;
+  font-family: "STSong";
+  font-weight: bold;
+  border-radius: 2.1rem;
+}
+.roomButtonContainer{
+  margin-top: -1rem;
+  width: 100%;
+  height: 8rem;
+  margin-bottom: 2rem;
+  display: inline-block;
+}
+.roomButton:hover{
+  background: brown;
+  color: white;
+  cursor: pointer;
 }
 </style>
 
