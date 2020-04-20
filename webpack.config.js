@@ -5,11 +5,15 @@ module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
-    filename: 'build.js'
+    publicPath: './dist',
+    filename: 'build.js',
   },
   module: {
     rules: [
+      {
+        test: /view-design.src.*?js$/,
+        loader: 'babel-loader'
+      },
       {
         test: /\.vue$/,
         loader: 'vue-loader',
@@ -82,6 +86,6 @@ if (process.env.NODE_ENV === 'production') {
     }),
     new webpack.LoaderOptionsPlugin({
       minimize: true
-    })
+    }),
   ])
 }

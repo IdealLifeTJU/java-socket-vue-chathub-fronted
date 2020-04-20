@@ -15,7 +15,7 @@
 [{
     //根据这个来排序消息
     id: 1, 
-    //1为文本，2为图片,3为文件
+    //1为文本，2为图片,3为文件,4为语音
     messageType: 1, 
     //头像序号
     avatarNum: Number
@@ -53,7 +53,7 @@
     .mb10{margin-bottom: 10px;}
     .mb20{margin-bottom: 20px;}
     .fs0{font-size: 0}
-    .title{background: #000; text-align: center; color:#fff; width: 100%; height: 50px; line-height: 50px; font-size: 14px;}
+    .title{background: #000; text-align: center; color:#fff; width: 100%; height: 75px; line-height: 50px; font-size: 50px; padding-top: 10px;}
     .loading,.no-more{text-align: center; color: #b0b0b0; line-height: 100px;}
     .no-more{line-height: 60px;}
     .pull-right{float: right;}
@@ -89,6 +89,15 @@
         color: #000;
         border-radius: 4px;
         box-shadow: 0px 1px 7px -5px #000;
+    }
+    .fileForm{
+      border: 0.2rem solid black;
+      color: white;
+      background-color: black;
+      border-radius: 2rem 0 0 0 !important;
+    }
+    .fileForm:hover{
+      color: rgba(6, 119, 134, 0.623) !important;
     }
     .message .avatar {
         float: left;
@@ -135,6 +144,10 @@
     }
     .message .image{
         max-width: 200px;
+    } 
+    .audioMes{
+      width: 15rem;
+      height: 4rem;
     }
     img.static-emotion-gif, img.static-emotion {
         vertical-align: middle !important;
@@ -232,7 +245,10 @@
                     <img :src="message.content" class="image" alt="聊天图片">
                   </div>
                   <!-- 文件 -->
-                  <a class="text" v-if="message.messageType==3" :download="message.content" :href="message.fileHref">{{message.content}}</a>
+                  <a class="text fileForm" v-if="message.messageType==3" :download="message.content" :href="message.fileHref">{{message.content}}</a>
+                  <!-- 音频 -->
+                  <audio preload controls v-if="message.messageType==4" class="audioMes text" :src="message.fileHref">
+                  </audio>
                 </div>
                 <!-- 其他 -->
                 <!--<div class="text" v-if="message.messagetype!=10000" v-text="'[暂未支持的消息类型:'+ message.messagetype +']\n\r' + message.content"></div>-->
@@ -247,6 +263,7 @@
 
 <script>
 import ScrollLoader from './scrollLoader.vue';
+
 export default {
   name: "wxChat",
   components: {

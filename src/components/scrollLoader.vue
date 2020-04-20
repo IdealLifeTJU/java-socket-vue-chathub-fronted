@@ -88,7 +88,6 @@
 <script>
     export default {
         name: "scroll-loader",
-        
         props: {
             //给slot传一个最小值，保证一开始能出现滚动条
             'minHeight': {
@@ -151,7 +150,6 @@
                     }
                 }, 50)
             },
-
         }
     }
 </script>
